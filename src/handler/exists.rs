@@ -8,8 +8,7 @@ use std::path::Path;
 const LAYER_PATH: &'static str = "/tmp/layers";
 
 pub async fn handler(
-    extract::Path(name): extract::Path<String>,
-    extract::Path(digest): extract::Path<String>,
+    extract::Path((name, digest)): extract::Path<(String, String)>,
 ) -> impl IntoResponse {
     let docker_content_digest = digest.clone();
 

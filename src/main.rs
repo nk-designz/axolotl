@@ -21,9 +21,15 @@ async fn main() {
 }
 
 async fn registry() {
+    let host: String = "0.0.0.0".to_string();
+    let port: usize = 3000;
+    println!(
+        "Starting registry on {0}:{1}.\n\tPress Ctrl-c to shutdown.",
+        host, port,
+    );
     let server = ServerBuilder::default()
-        .host("0.0.0.0".to_string())
-        .port(3000)
+        .host(host)
+        .port(port)
         .build()
         .unwrap();
     server.run().await;
