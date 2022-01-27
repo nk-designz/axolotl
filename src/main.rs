@@ -5,6 +5,7 @@ use tokio::{signal, task};
 mod server;
 use server::server::ServerBuilder;
 pub mod handler;
+pub mod schema;
 
 #[tokio::main]
 async fn main() {
