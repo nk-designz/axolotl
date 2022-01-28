@@ -95,6 +95,12 @@ impl<'de> Visitor<'de> for MediaTypeVisitor {
             ))),
         }
     }
+    fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
+    where
+        E: de::Error,
+    {
+        self.visit_str(value.as_str())
+    }
 }
 
 impl<'de> Deserialize<'de> for MediaType {
