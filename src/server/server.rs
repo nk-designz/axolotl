@@ -1,10 +1,9 @@
+use super::super::handler::{index, layer, manifest, root};
 use anyhow::Error;
 use axum::{
     routing::{get, head, patch, post, put},
     Router,
 };
-
-use super::super::handler::{exists, finish, index, manifest, root, upload, uploads};
 
 #[derive(Clone, PartialEq, Builder)]
 pub struct Server {
@@ -17,14 +16,14 @@ impl Server {
         let app = Router::new()
             .route("/", get(index::handler))
             .route("/v2", get(root::handler))
-            .route("/v2/:name/blobs/:digest", head(exists::handler))
-            .route("/v2/:name/blobs/uploads", post(uploads::handler))
-            .route("/v2/:name/blobs/uploads/:uuid", patch(upload::handler))
-            .route("/v2/:name/blobs/uploads/:uuid", put(finish::handler))
+            .route("/v2/:name/blobs/:digest", head(layer::exists))
+            .route("/v2/:name/blobs/uploads", post(layer::start_upload))
+            .route("/v2/:name/blobs/uploads/:uuid", patch(layer::upload))
+            .route("/v2/:name/blobs/uploads/:uuid", put(layer::finish_upload))
             .route("/v2/:name/manifests/:reference", head(manifest::exists))
-            .route("/v2/:name/manifests/:reference", put(index::handler))
-            .route("/v2/:name/blobs/:digest", get(index::handler))
-            .route("/v2/:name/manifests/:reference", get(index::handler));
+            .route("/v2/:name/manifests/:reference", put(manifest::save))
+            .route("/v2/:name/blobs/:digest", get(layer::get))
+            .route("/v2/:name/manifests/:reference", get(manifest::get));
 
         match axum::Server::bind(match &format!("{0}:{1}", self.host, self.port).parse() {
             Ok(sock) => sock,

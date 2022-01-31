@@ -9,6 +9,11 @@ pub mod schema;
 
 #[tokio::main]
 async fn main() {
+    stderrlog::new()
+        .module(module_path!())
+        .verbosity(4)
+        .init()
+        .unwrap();
     // Start registry server
     task::spawn(registry());
     // Stop on ctr-c
