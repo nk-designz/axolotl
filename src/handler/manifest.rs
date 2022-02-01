@@ -7,7 +7,7 @@ use axum::{
 use http::StatusCode;
 use serde_json;
 use sha256::digest_file;
-use std::fs::{read_to_string, rename, OpenOptions};
+use std::fs::{copy, read_to_string, OpenOptions};
 use std::io::{prelude::*, SeekFrom};
 use std::path::Path;
 
@@ -76,7 +76,7 @@ pub async fn save(
 
     let hash = digest_file(&manifest_path_string).unwrap();
 
-    rename(
+    copy(
         manifest_path_string,
         format!("{0}/{1}.json", MANIFEST_PATH, hash),
     )
@@ -101,20 +101,29 @@ pub async fn get(
     let hash_path = Path::new(&hash_path_string);
     let path: String;
 
-    if !manifest_path.exists() {
+    if manifest_path.exists() {
         path = manifest_path_string;
-    } else if !hash_path.exists() {
+    } else if hash_path.exists() {
         path = hash_path_string;
     } else {
         return (
             StatusCode::NOT_FOUND,
             Headers(vec![("reference", reference)]),
+            "".to_string(),
         );
     }
 
-    let manifest_string: String = read_to_string(&path).unwrap().parse().unwrap();
+    let manifest_string: String = match read_to_string(&path) {
+        Ok(manifest_content) => manifest_content,
+        Err(err) => panic!("Reading file {0} failed: {1}", &path, err),
+    }
+    .parse()
+    .unwrap();
 
-    let content: manifest::Manifest = serde_json::from_str(&manifest_string).unwrap();
+    let content: manifest::ImageManifest = match serde_json::from_str(&manifest_string) {
+        Ok(content) => content,
+        Err(err) => panic!("{}", err),
+    };
 
     let content_length = Path::new(&path).metadata().unwrap().len();
 
@@ -124,7 +133,8 @@ pub async fn get(
         Headers(vec![
             ("docker-content-digest", format!("sha256:{0}", digest)),
             ("media-type", content.media_type.to_string()),
-            ("content-length", content_length.to_string()),
+            // ("content-length", content_length.to_string()),
         ]),
+        serde_json::to_string(&content).unwrap(),
     )
 }

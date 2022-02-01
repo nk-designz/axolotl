@@ -108,6 +108,6 @@ impl<'de> Deserialize<'de> for MediaType {
     where
         D: Deserializer<'de>,
     {
-        deserializer.deserialize_i32(MediaTypeVisitor)
+        deserializer.deserialize_any(MediaTypeVisitor)
     }
 }

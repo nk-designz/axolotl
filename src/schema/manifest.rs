@@ -32,17 +32,17 @@ pub struct Platform {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ImageManifests {
+pub struct ImageManifest {
     #[serde(rename = "schemaVersion")]
-    pub schema_version: String,
+    pub schema_version: u8,
     #[serde(rename = "mediaType")]
     pub media_type: MediaType,
-    pub config: ImageManifetConfig,
+    pub config: ImageManifestConfig,
     pub layers: Vec<Layer>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct ImageManifetConfig {
+pub struct ImageManifestConfig {
     #[serde(rename = "mediaType")]
     pub media_type: MediaType,
     pub size: i64,
@@ -55,5 +55,6 @@ pub struct Layer {
     pub media_type: MediaType,
     pub size: i64,
     pub digest: String,
-    pub urls: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub urls: Option<Vec<String>>,
 }
