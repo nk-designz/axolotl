@@ -1,4 +1,5 @@
 use super::super::schema::manifest;
+use super::super::schema::media_type::MediaType;
 use axum::{
     body::Bytes,
     extract,
@@ -91,8 +92,10 @@ pub async fn save(
 
 pub async fn get(
     extract::Path((name, reference)): extract::Path<(String, String)>,
+    headers: http::header::HeaderMap,
 ) -> impl IntoResponse {
     log::info!("Request: File: {0} (line: {1})", file!(), line!());
+    log::info!("{:?}", headers);
     let hash = reference.split(":").last().unwrap();
     let manifest_path_string = format!("{0}/{1}.{2}.json", MANIFEST_PATH, name, reference);
     let manifest_path = Path::new(&manifest_path_string);
@@ -125,15 +128,21 @@ pub async fn get(
         Err(err) => panic!("{}", err),
     };
 
-    let content_length = Path::new(&path).metadata().unwrap().len();
+    let _content_length = Path::new(&path).metadata().unwrap().len();
 
     let digest = digest_file(path).unwrap();
     (
         StatusCode::OK,
         Headers(vec![
             ("docker-content-digest", format!("sha256:{0}", digest)),
-            ("media-type", content.media_type.to_string()),
-            // ("content-length", content_length.to_string()),
+            (
+                "media-type",
+                content
+                    .media_type
+                    .clone()
+                    .unwrap_or(MediaType::Default)
+                    .to_string(),
+            ),
         ]),
         serde_json::to_string(&content).unwrap(),
     )

@@ -1,5 +1,6 @@
 use super::media_type::MediaType;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct ManifestList {
@@ -36,7 +37,8 @@ pub struct ImageManifest {
     #[serde(rename = "schemaVersion")]
     pub schema_version: u8,
     #[serde(rename = "mediaType")]
-    pub media_type: MediaType,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub media_type: Option<MediaType>,
     pub config: ImageManifestConfig,
     pub layers: Vec<Layer>,
 }
@@ -57,4 +59,6 @@ pub struct Layer {
     pub digest: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub urls: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub annotations: Option<HashMap<String, String>>,
 }

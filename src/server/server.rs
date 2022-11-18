@@ -11,11 +11,14 @@ pub struct Server {
     pub port: usize,
 }
 
+use tower_http::trace::TraceLayer;
+
 impl Server {
     pub async fn run(&self) -> Option<Error> {
         let app = Router::new()
             .route("/", get(index::handler))
             .route("/v2", get(root::handler))
+            .route("/v1", get(root::handler))
             .route("/v2/:name/blobs/:digest", head(layer::exists))
             .route("/v2/:name/blobs/uploads", post(layer::start_upload))
             .route("/v2/:name/blobs/uploads/:uuid", patch(layer::upload))
@@ -23,7 +26,8 @@ impl Server {
             .route("/v2/:name/manifests/:reference", head(manifest::exists))
             .route("/v2/:name/manifests/:reference", put(manifest::save))
             .route("/v2/:name/blobs/:digest", get(layer::get))
-            .route("/v2/:name/manifests/:reference", get(manifest::get));
+            .route("/v2/:name/manifests/:reference", get(manifest::get))
+            .layer(TraceLayer::new_for_http());
 
         match axum::Server::bind(match &format!("{0}:{1}", self.host, self.port).parse() {
             Ok(sock) => sock,
